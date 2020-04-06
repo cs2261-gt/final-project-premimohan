@@ -5,6 +5,8 @@
 #include "game.h"
 #include "startScreen.h"
 #include "instructScreen.h"
+#include "clouds.h"
+#include "spritesheet.h"
 
 // buttons
 unsigned short buttons;
@@ -85,8 +87,6 @@ void goToStart() {
 }
 
 void startState() {
-    // increment the seed
-    seed++;
     // setting the frame rate
     waitForVBlank();
     if (BUTTON_PRESSED(BUTTON_START)) {
@@ -110,23 +110,55 @@ void goToInstruct() {
 void instructState() {
     // setting the frame rate
     waitForVBlank();
+    // increment the seed
+    seed++;
     if (BUTTON_PRESSED(BUTTON_START)) {
+        // seed the random function
+        srand(seed);
         // gotogame function
         goToGame();
         // initialize the game state
-        // initGame();
-        // seed the random function
-        srand(seed);
+        initGame();
     }
-
 }
 
 void goToGame() {
-    
+    // setting the frame rate
+    waitForVBlank();
+    // load the background palette and tiles
+    DMANow(3, startScreenPal, PALETTE, 256);
+    DMANow(3, startScreenTiles, &CHARBLOCK[0], startScreenTilesLen/2);
+    DMANow(3, startScreenMap, &SCREENBLOCK[28], startScreenMapLen/2);
+    // set the background register
+    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_SMALL;
+    // load spritesheet tiles and palette into memory
+    DMANow(3, spritesheetPal, SPRITEPALETTE, 256);
+    DMANow(3, spritesheetTiles, &CHARBLOCK[4], spritesheetTilesLen / 2);
+    // hide all the sprites
+    hideSprites();
+    // enable the sprites
+    REG_DISPCTL = MODE0 | BG0_ENABLE | SPRITE_ENABLE; 
+    // wait for vblank
+    waitForVBlank();
+    // dma the shadowoam to the oam
+    DMANow(3, shadowOAM, OAM, 512);
+    // set the state of the game to GAME
+    state = GAME;
 }
 
 void gameState() {
-
+    // update the game
+    updateGame();
+    // draw the sprites
+    drawGame();
+    // setting the frame rate
+    waitForVBlank();
+    // copy the shadowOAM to the OAM
+    DMANow(3, shadowOAM, OAM, 512);
+    // if the player presses start, go to pause state
+    if (BUTTON_PRESSED(BUTTON_START)) {
+        goToPause();
+    }
 }
 
 void goToPause() {

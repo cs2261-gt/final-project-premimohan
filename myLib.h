@@ -6,6 +6,10 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 
+// gravity macros
+#define SHIFTUP(num) ((num)<<8)
+#define SHIFTDOWN(num) ((num)>>8)
+
 // Common Macros
 #define OFFSET(col,row,rowlen) ((row)*(rowlen)+(col))
 
