@@ -9,6 +9,9 @@
 
 // create time variable
 int time;
+// create voff and hoff variables
+int vOff;
+int hOff;
 
 // create pool of platforms
 Platform platforms[MAXPLATLEN];
@@ -25,6 +28,8 @@ void goToLose();
 
 // initialize the game and increments the time variable
 void initGame() {
+    vOff = 352;
+    hOff = 0;
     initPlatform();
     initGummy();
     initBees();
@@ -32,15 +37,19 @@ void initGame() {
 }
 
 void initPlatform() {
-    platforms[0].screenRow = 152;
-    platforms[0].screenCol = rand() % 240;
+    platforms[0].worldRow = WORLDHEIGHT - 9 + vOff;
+    platforms[0].worldCol = rand() % 223 + hOff;
+    platforms[0].screenRow = platforms[0].worldRow - vOff;
+    platforms[0].screenCol = platforms[0].worldCol - hOff;
     platforms[0].rdel = 8;
     platforms[0].width = 16;
     platforms[0].height = 8;
     platforms[0].active = 1;
     for (int i = 1; i < MAXPLATLEN; i++) {
-        platforms[i].screenRow = platforms[i-1].screenRow - 16;
-        platforms[i].screenCol = rand() % 240;
+        platforms[i].worldRow = platforms[i-1].worldRow - 15 + vOff;
+        platforms[i].worldCol = rand() % 223 + hOff;
+        platforms[i].screenRow = platforms[i].worldRow - vOff;
+        platforms[i].screenCol = platforms[i].worldCol - hOff;
         platforms[i].rdel = 8;
         platforms[i].width = 16;
         platforms[i].height = 8;
@@ -52,29 +61,34 @@ void initGummy() {
     gummy.width = 8;
     gummy.height = 16;
     gummy.active = 1;
-    gummy.screenRow = platforms[0].screenRow - gummy.height + 4;
-    gummy.screenCol = platforms[0].screenCol + 7;
+    gummy.worldRow = SHIFTUP(platforms[0].worldRow - gummy.height + 4 + vOff);
+    gummy.worldCol = platforms[0].worldCol + 7 + hOff;
+    // don't really remember how to do this premi why you like this
+    gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
+    gummy.screenCol = gummy.worldCol - hOff;
     // need to implement gravity and change initial rdel
-    gummy.rdel = 16; 
+    gummy.rdel = 0; 
     // change cdel depending on how far gummy should be able to jump
     gummy.cdel = 2;
 }
 
 void initBees() {
     for (int i = 0; i < MAXBEELEN; i++) {
-        bees[i].screenRow = rand() % 320;
-        bees[i].screenCol = rand() % 240;
+        bees[i].worldRow = rand() % 160 + vOff;
+        bees[i].worldCol = rand() % 176 + hOff;
+        bees[i].screenRow = bees[i].worldRow - vOff;
+        bees[i].screenCol = bees[i].worldCol - hOff;
+        bees[i].minCol = bees[i].worldCol;
+        bees[i].maxCol = bees[i].worldCol + 47;
         bees[i].active = 1;
         bees[i].rdel = 0;
-        bees[i].cdel = 16;
+        bees[i].cdel = 15;
         bees[i].height = 8;
         bees[i].width = 16;
         bees[i].aniCounter = 0;
         bees[i].aniState = BEERIGHT;
         bees[i].curFrame = 0;
         bees[i].numFrames = 3;
-        bees[i].minCol = bees[i].screenCol;
-        bees[i].maxCol = bees[i].screenCol + 63;
     }
 }
 
@@ -86,15 +100,30 @@ void updateGame() {
     aniBees();
 }
 
+// premi what's happening in this method pls figure it out
 void aniBees() {
-    if (bees[0].aniCounter % 18 == 0) {
         for (int i = 0; i < MAXBEELEN; i++) {
-            bees[i].screenCol += (bees[i].cdel-1);
-            if (bees[i].screenCol == bees[i].maxCol) {
-                bees[i].aniState = BEELEFT;
-            } 
+            if (bees[i].aniCounter % 250 == 0) {
+            // update the col based on whether going right or left
+                if (bees[i].aniState == BEERIGHT) {
+                    bees[i].worldCol += bees[i].cdel;
+                } else if (bees[i].aniState == BEELEFT) {
+                    bees[i].worldCol -= bees[i].cdel;
+                }
+                // flip the bee around if it's at max/min col 
+                if (bees[i].worldCol == bees[i].maxCol) {
+                    bees[i].aniState = BEELEFT;
+                    bees[i].curFrame = 0;
+                } else if (bees[i].worldCol == bees[i].minCol) {
+                    bees[i].aniState = BEERIGHT;
+                    bees[i].curFrame = 0;
+                } else {
+                    bees[i].curFrame++;
+                }
+                bees[i].screenCol = bees[i].worldCol - vOff;
+                //bees[i].screenRow = bees[i].worldRow - hOff;
+            }
         }
-    }
 }
 
 void updateGummy() {
@@ -105,25 +134,28 @@ void updateGummy() {
     }
     // assuming this is where i implement gravity ?
     if (BUTTON_PRESSED(BUTTON_UP)) {
-        gummy.screenRow -= gummy.rdel;
+        gummy.worldRow += gummy.rdel;
+    } else {
+        gummy.rdel = 0;
     }
+    gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
 }
 
 void drawGame() {
     // draw platforms
     for (int i = 0; i < MAXPLATLEN; i++) {
-        shadowOAM[i].attr0 = platforms[i].screenRow | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
-        shadowOAM[i].attr1 = platforms[i].screenCol | ATTR1_TINY;
+        shadowOAM[i].attr0 = (ROWMASK & platforms[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
+        shadowOAM[i].attr1 = (COLMASK & platforms[i].screenCol) | ATTR1_TINY;
         shadowOAM[i].attr2 = ATTR2_TILEID(0, 0);
     }
     // draw gummy
-    shadowOAM[127].attr0 = gummy.screenRow | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_TALL | ATTR0_NOBLEND;
-    shadowOAM[127].attr1 = gummy.screenCol | ATTR1_TINY;
+    shadowOAM[127].attr0 = (ROWMASK & gummy.screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_TALL | ATTR0_NOBLEND;
+    shadowOAM[127].attr1 = (COLMASK & gummy.screenCol) | ATTR1_TINY;
     shadowOAM[127].attr2 = ATTR2_TILEID(2, 0);
     // draw bees
     for (int i = 0; i < MAXBEELEN; i++) {
-        shadowOAM[i + 20].attr0 = bees[i].screenRow | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
-        shadowOAM[i + 20].attr1 = bees[i].screenCol | ATTR1_TINY;
-        shadowOAM[i + 20].attr2 = ATTR2_TILEID(bees[i].aniState, bees[i].curFrame*2);
+        shadowOAM[i + 20].attr0 = (ROWMASK & bees[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
+        shadowOAM[i + 20].attr1 = (COLMASK & bees[i].screenCol) | ATTR1_TINY;
+        shadowOAM[i + 20].attr2 = ATTR2_TILEID(bees[i].aniState, bees[i].curFrame);
     }
 }

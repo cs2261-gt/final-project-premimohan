@@ -7,6 +7,7 @@
 #include "instructScreen.h"
 #include "clouds.h"
 #include "spritesheet.h"
+#include "candy.h"
 
 // buttons
 unsigned short buttons;
@@ -126,11 +127,14 @@ void goToGame() {
     // setting the frame rate
     waitForVBlank();
     // load the background palette and tiles
-    DMANow(3, startScreenPal, PALETTE, 256);
-    DMANow(3, startScreenTiles, &CHARBLOCK[0], startScreenTilesLen/2);
-    DMANow(3, startScreenMap, &SCREENBLOCK[28], startScreenMapLen/2);
+    DMANow(3, candyPal, PALETTE, 256);
+    DMANow(3, candyTiles, &CHARBLOCK[0], candyTilesLen/2);
+    DMANow(3, candyMap, &SCREENBLOCK[28], candyMapLen/2);
     // set the background register
-    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_SMALL;
+    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_TALL;
+    // move the screen onto the candy map
+    REG_BG0VOFF = vOff;
+    REG_BG0HOFF = hOff;
     // load spritesheet tiles and palette into memory
     DMANow(3, spritesheetPal, SPRITEPALETTE, 256);
     DMANow(3, spritesheetTiles, &CHARBLOCK[4], spritesheetTilesLen / 2);
@@ -155,6 +159,9 @@ void gameState() {
     waitForVBlank();
     // copy the shadowOAM to the OAM
     DMANow(3, shadowOAM, OAM, 512);
+    // move the screen according to voff and hoff
+    REG_BG0HOFF = hOff;
+    REG_BG0VOFF = vOff;
     // if the player presses start, go to pause state
     if (BUTTON_PRESSED(BUTTON_START)) {
         goToPause();

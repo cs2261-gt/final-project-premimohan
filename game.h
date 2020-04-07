@@ -8,10 +8,13 @@ void initBees();
 void updateGummy();
 void aniBees();
 
+
 // platform struct definition
 typedef struct {
     int screenRow;
     int screenCol;
+    int worldRow;
+    int worldCol;
     int rdel;
     int cdel;
     int width;
@@ -23,6 +26,8 @@ typedef struct {
 typedef struct {
     int screenRow;
     int screenCol;
+    int worldRow;
+    int worldCol;
     int rdel;
     int cdel;
     int width;
@@ -34,6 +39,8 @@ typedef struct {
 typedef struct {
     int screenRow;
     int screenCol;
+    int worldRow;
+    int worldCol;
     int minCol;
     int maxCol;
     int rdel;
@@ -52,8 +59,16 @@ typedef struct {
 #define MAXPLATLEN 20
 
 // max number of bees on screen
-#define MAXBEELEN 4
+#define MAXBEELEN 2
 
 // gravity 
 #define GRAVITY 100
 #define JUMPPOWER 1500
+
+// constants
+#define WORLDHEIGHT 512
+#define WORLDWIDTH 256
+
+// voff and hoff variables
+extern int hOff;
+extern int vOff;
