@@ -56,10 +56,10 @@ typedef struct {
 } Bee;
 
 // max number of platforms
-#define MAXPLATLEN 20
+#define MAXPLATLEN 19
 
 // max number of bees on screen
-#define MAXBEELEN 2
+#define MAXBEELEN 4
 
 // gravity 
 #define GRAVITY 100

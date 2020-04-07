@@ -37,7 +37,7 @@ void initGame() {
 }
 
 void initPlatform() {
-    platforms[0].worldRow = WORLDHEIGHT - 9 + vOff;
+    platforms[0].worldRow = SCREENHEIGHT - 9 + vOff;
     platforms[0].worldCol = rand() % 223 + hOff;
     platforms[0].screenRow = platforms[0].worldRow - vOff;
     platforms[0].screenCol = platforms[0].worldCol - hOff;
@@ -61,11 +61,11 @@ void initGummy() {
     gummy.width = 8;
     gummy.height = 16;
     gummy.active = 1;
-    gummy.worldRow = SHIFTUP(platforms[0].worldRow - gummy.height + 4 + vOff);
-    gummy.worldCol = platforms[0].worldCol + 7 + hOff;
+    gummy.worldRow = SHIFTUP(platforms[0].worldRow - gummy.height + 4);
+    gummy.worldCol = platforms[0].worldCol + 6;
     // not sure how to get the screenrow from worldrow
-    gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
-    gummy.screenCol = gummy.worldCol - hOff;
+    //gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
+    //gummy.screenCol = gummy.worldCol - hOff;
     // need to implement gravity and change initial rdel
     gummy.rdel = 0; 
     // change cdel depending on how far gummy should be able to jump
@@ -74,7 +74,7 @@ void initGummy() {
 
 void initBees() {
     for (int i = 0; i < MAXBEELEN; i++) {
-        bees[i].worldRow = rand() % 160 + vOff;
+        bees[i].worldRow = rand() % 151 + vOff;
         bees[i].worldCol = rand() % 176 + hOff;
         bees[i].screenRow = bees[i].worldRow - vOff;
         bees[i].screenCol = bees[i].worldCol - hOff;
@@ -127,7 +127,6 @@ void aniBees() {
                     }
                 }
                 bees[i].screenCol = bees[i].worldCol - hOff;
-                //bees[i].screenRow = bees[i].worldRow - hOff;
             }
         }
 }
@@ -139,12 +138,13 @@ void updateGummy() {
         gummy.screenCol -= gummy.cdel;
     }
     // assuming this is where i implement gravity ?
-    if (BUTTON_PRESSED(BUTTON_UP)) {
-        gummy.worldRow += gummy.rdel;
-    } else {
-        gummy.rdel = 0;
-    }
-    gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
+    // if (BUTTON_PRESSED(BUTTON_UP)) {
+    //     gummy.worldRow += gummy.rdel;
+    // } else {
+    //     gummy.rdel = 0;
+    // }
+    gummy.screenRow = SHIFTDOWN(gummy.worldRow) - vOff;
+    gummy.screenCol = gummy.worldCol - hOff;
 }
 
 void drawGame() {
