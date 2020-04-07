@@ -63,7 +63,7 @@ void initGummy() {
     gummy.active = 1;
     gummy.worldRow = SHIFTUP(platforms[0].worldRow - gummy.height + 4 + vOff);
     gummy.worldCol = platforms[0].worldCol + 7 + hOff;
-    // don't really remember how to do this premi why you like this
+    // not sure how to get the screenrow from worldrow
     gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
     gummy.screenCol = gummy.worldCol - hOff;
     // need to implement gravity and change initial rdel
@@ -79,10 +79,10 @@ void initBees() {
         bees[i].screenRow = bees[i].worldRow - vOff;
         bees[i].screenCol = bees[i].worldCol - hOff;
         bees[i].minCol = bees[i].worldCol;
-        bees[i].maxCol = bees[i].worldCol + 47;
+        bees[i].maxCol = bees[i].worldCol + 64;
         bees[i].active = 1;
         bees[i].rdel = 0;
-        bees[i].cdel = 15;
+        bees[i].cdel = 16;
         bees[i].height = 8;
         bees[i].width = 16;
         bees[i].aniCounter = 0;
@@ -103,7 +103,7 @@ void updateGame() {
 // premi what's happening in this method pls figure it out
 void aniBees() {
         for (int i = 0; i < MAXBEELEN; i++) {
-            if (bees[i].aniCounter % 250 == 0) {
+            if (bees[i].aniCounter % 50 == 0) {
             // update the col based on whether going right or left
                 if (bees[i].aniState == BEERIGHT) {
                     bees[i].worldCol += bees[i].cdel;
@@ -111,16 +111,22 @@ void aniBees() {
                     bees[i].worldCol -= bees[i].cdel;
                 }
                 // flip the bee around if it's at max/min col 
-                if (bees[i].worldCol == bees[i].maxCol) {
+                if (bees[i].worldCol >= bees[i].maxCol) {
                     bees[i].aniState = BEELEFT;
                     bees[i].curFrame = 0;
-                } else if (bees[i].worldCol == bees[i].minCol) {
+                    bees[i].worldCol -= bees[i].cdel;
+                } else if (bees[i].worldCol <= bees[i].minCol) {
                     bees[i].aniState = BEERIGHT;
                     bees[i].curFrame = 0;
+                    bees[i].worldCol += bees[i].cdel;
                 } else {
-                    bees[i].curFrame++;
+                    if (bees[i].curFrame == (bees[i].numFrames - 1)) {
+                        bees[i].curFrame = 0;
+                    } else {
+                        bees[i].curFrame++;
+                    }
                 }
-                bees[i].screenCol = bees[i].worldCol - vOff;
+                bees[i].screenCol = bees[i].worldCol - hOff;
                 //bees[i].screenRow = bees[i].worldRow - hOff;
             }
         }
