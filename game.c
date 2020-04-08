@@ -61,11 +61,8 @@ void initGummy() {
     gummy.width = 8;
     gummy.height = 16;
     gummy.active = 1;
-    gummy.worldRow = SHIFTUP(platforms[0].worldRow - gummy.height + 4);
+    gummy.worldRow = SHIFTUP(0 + vOff);
     gummy.worldCol = platforms[0].worldCol + 6;
-    // not sure how to get the screenrow from worldrow
-    //gummy.screenRow = SHIFTDOWN(gummy.worldRow - vOff);
-    //gummy.screenCol = gummy.worldCol - hOff;
     // need to implement gravity and change initial rdel
     gummy.rdel = 0; 
     // change cdel depending on how far gummy should be able to jump
@@ -98,6 +95,7 @@ void updateGame() {
     }
     updateGummy();
     aniBees();
+    time++;
 }
 
 // premi what's happening in this method pls figure it out
@@ -133,19 +131,44 @@ void aniBees() {
 
 void updateGummy() {
     if (BUTTON_PRESSED(BUTTON_RIGHT)) {
-        gummy.screenCol += gummy.cdel;
+        gummy.worldCol += gummy.cdel;
     } else if (BUTTON_PRESSED(BUTTON_LEFT)) {
-        gummy.screenCol -= gummy.cdel;
+        gummy.worldCol -= gummy.cdel;
     }
-    // assuming this is where i implement gravity ?
-    // if (BUTTON_PRESSED(BUTTON_UP)) {
-    //     gummy.worldRow += gummy.rdel;
-    // } else {
-    //     gummy.rdel = 0;
-    // }
+    if (BUTTON_PRESSED(BUTTON_UP)) {
+        gummy.rdel -= JUMPPOWER;
+    }
+    if (time % 200) {
+        gummy.rdel += GRAVITY;
+    }
+    // checking if it's on a platforms
+    if (checkForPlatform()) {
+        gummy.rdel = 0;
+        // allowing the gummy to jump if it's currently on a platform
+        if (BUTTON_PRESSED(BUTTON_UP)) {
+            gummy.rdel -= JUMPPOWER;
+            gummy.worldRow += gummy.rdel;
+        }
+    } else {
+        gummy.worldRow += gummy.rdel;
+    }
     gummy.screenRow = SHIFTDOWN(gummy.worldRow) - vOff;
     gummy.screenCol = gummy.worldCol - hOff;
 }
+
+int checkForPlatform() {
+    for (int i = 0; i < MAXPLATLEN; i++) {
+        if (collision(platforms[i].screenCol, platforms[i].screenRow, platforms[i].width, platforms[i].height, 
+            gummy.screenCol, gummy.screenRow, gummy.width, gummy.height)) {
+                return 1;
+        }
+    }
+    return 0;
+}
+
+// int platformCol(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB) {
+//     return rowA < rowB + heightB - 1 && rowA + heightA - 1 > rowB;
+// }
 
 void drawGame() {
     // draw platforms

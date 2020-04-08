@@ -7,7 +7,8 @@ void initGummy();
 void initBees();
 void updateGummy();
 void aniBees();
-
+// int platformCol(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
+int checkForPlatform();
 
 // platform struct definition
 typedef struct {
@@ -62,8 +63,8 @@ typedef struct {
 #define MAXBEELEN 4
 
 // gravity 
-#define GRAVITY 100
-#define JUMPPOWER 1500
+#define GRAVITY 3
+#define JUMPPOWER 150
 
 // constants
 #define WORLDHEIGHT 512
