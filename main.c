@@ -5,6 +5,7 @@
 #include "game.h"
 #include "startScreen.h"
 #include "instructScreen.h"
+#include "loseScreen.h"
 #include "clouds.h"
 #include "spritesheet.h"
 #include "candy.h"
@@ -37,6 +38,7 @@ void goToGame();
 void goToCheat();
 void goToLose();
 void goToPause();
+
 
 int main() {
     // initialize the GBA settings
@@ -157,7 +159,7 @@ void gameState() {
     drawGame();
     // setting the frame rate
     waitForVBlank();
-    // copy the shadowOAM to the OAM
+    // dma the shadowoam to the oam
     DMANow(3, shadowOAM, OAM, 512);
     // move the screen according to voff and hoff
     REG_BG0HOFF = hOff;
@@ -165,6 +167,9 @@ void gameState() {
     // if the player presses start, go to pause state
     if (BUTTON_PRESSED(BUTTON_START)) {
         goToPause();
+    }
+    if (checkForBee()) {
+        goToLose();
     }
 }
 
@@ -185,9 +190,26 @@ void cheatState() {
 }
 
 void goToLose() {
-
+    // setting the frame rate
+    waitForVBlank();
+    // enable mode 0 and background 0
+    DMANow(3, loseScreenPal, PALETTE, 256);
+    DMANow(3, loseScreenTiles, &CHARBLOCK[0], loseScreenTilesLen/2);
+    DMANow(3, loseScreenMap, &SCREENBLOCK[28], loseScreenMapLen/2);
+    hideSprites();
+    DMANow(3, shadowOAM, OAM, 512);
+    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_SMALL; 
+    REG_BG0HOFF = 0;
+    REG_BG0VOFF = 0;
+    // set the state of the game to LOSE;
+    state = LOSE;
 }
 
 void loseState() {
-
+    // setting the frame rate
+    waitForVBlank();
+    if (BUTTON_PRESSED(BUTTON_START)) {
+        // go to start function
+        goToStart();
+    }
 }

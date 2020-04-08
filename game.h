@@ -9,6 +9,8 @@ void updateGummy();
 void aniBees();
 // int platformCol(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB);
 int checkForPlatform();
+int checkForBee();
+void updatePlatform();
 
 // platform struct definition
 typedef struct {
@@ -57,7 +59,7 @@ typedef struct {
 } Bee;
 
 // max number of platforms
-#define MAXPLATLEN 19
+#define MAXPLATLEN 10
 
 // max number of bees on screen
 #define MAXBEELEN 4

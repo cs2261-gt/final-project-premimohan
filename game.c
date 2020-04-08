@@ -25,6 +25,7 @@ enum {T0, T1, T2, BEERIGHT, T4, BEELEFT};
 
 // function prototypes
 void goToLose();
+void hideSprites();
 
 // initialize the game and increments the time variable
 void initGame() {
@@ -39,17 +40,17 @@ void initGame() {
 void initPlatform() {
     platforms[0].worldRow = SCREENHEIGHT - 9 + vOff;
     platforms[0].worldCol = rand() % 223 + hOff;
-    platforms[0].screenRow = platforms[0].worldRow - vOff;
-    platforms[0].screenCol = platforms[0].worldCol - hOff;
+    //platforms[0].screenRow = platforms[0].worldRow - vOff;
+    //platforms[0].screenCol = platforms[0].worldCol - hOff;
     platforms[0].rdel = 8;
     platforms[0].width = 16;
     platforms[0].height = 8;
     platforms[0].active = 1;
     for (int i = 1; i < MAXPLATLEN; i++) {
-        platforms[i].worldRow = platforms[i-1].worldRow - 15 + vOff;
-        platforms[i].worldCol = rand() % 223 + hOff;
-        platforms[i].screenRow = platforms[i].worldRow - vOff;
-        platforms[i].screenCol = platforms[i].worldCol - hOff;
+        platforms[i].worldRow = platforms[i-1].worldRow - 15;
+        platforms[i].worldCol = rand() % 223;
+        //platforms[i].screenRow = platforms[i].worldRow - vOff;
+        //platforms[i].screenCol = platforms[i].worldCol - hOff;
         platforms[i].rdel = 8;
         platforms[i].width = 16;
         platforms[i].height = 8;
@@ -61,10 +62,10 @@ void initGummy() {
     gummy.width = 8;
     gummy.height = 16;
     gummy.active = 1;
-    gummy.worldRow = SHIFTUP(0 + vOff);
+    gummy.worldRow = SHIFTUP(SCREENHEIGHT - 9 - gummy.height + vOff);
     gummy.worldCol = platforms[0].worldCol + 6;
     // need to implement gravity and change initial rdel
-    gummy.rdel = 0; 
+    gummy.rdel = 0;
     // change cdel depending on how far gummy should be able to jump
     gummy.cdel = 2;
 }
@@ -73,8 +74,8 @@ void initBees() {
     for (int i = 0; i < MAXBEELEN; i++) {
         bees[i].worldRow = rand() % 151 + vOff;
         bees[i].worldCol = rand() % 176 + hOff;
-        bees[i].screenRow = bees[i].worldRow - vOff;
-        bees[i].screenCol = bees[i].worldCol - hOff;
+        // bees[i].screenRow = bees[i].worldRow - vOff;
+        // bees[i].screenCol = bees[i].worldCol - hOff;
         bees[i].minCol = bees[i].worldCol;
         bees[i].maxCol = bees[i].worldCol + 64;
         bees[i].active = 1;
@@ -95,10 +96,11 @@ void updateGame() {
     }
     updateGummy();
     aniBees();
+    updatePlatform();
+    //checkForBee();
     time++;
 }
 
-// premi what's happening in this method pls figure it out
 void aniBees() {
         for (int i = 0; i < MAXBEELEN; i++) {
             if (bees[i].aniCounter % 50 == 0) {
@@ -125,6 +127,7 @@ void aniBees() {
                     }
                 }
                 bees[i].screenCol = bees[i].worldCol - hOff;
+                bees[i].screenRow = bees[i].worldRow - vOff;
             }
         }
 }
@@ -141,24 +144,46 @@ void updateGummy() {
     if (time % 200) {
         gummy.rdel += GRAVITY;
     }
-    // checking if it's on a platforms
-    if (checkForPlatform()) {
+    // checking if it's on a platform
+    if (!checkForPlatform()) {
+        //gummy.rdel = 0;
+        // // allowing the gummy to jump if it's currently on a platform
+        // if (BUTTON_PRESSED(BUTTON_UP)) {
+        //     gummy.rdel -= JUMPPOWER;
+        //     gummy.worldRow += gummy.rdel;
+        // }
+        gummy.worldRow += gummy.rdel;
+    } else {
         gummy.rdel = 0;
-        // allowing the gummy to jump if it's currently on a platform
         if (BUTTON_PRESSED(BUTTON_UP)) {
             gummy.rdel -= JUMPPOWER;
             gummy.worldRow += gummy.rdel;
         }
-    } else {
-        gummy.worldRow += gummy.rdel;
     }
     gummy.screenRow = SHIFTDOWN(gummy.worldRow) - vOff;
     gummy.screenCol = gummy.worldCol - hOff;
 }
 
+void updatePlatform() {
+    for(int i = 0; i < MAXPLATLEN; i++){
+        platforms[i].screenRow = platforms[i].worldRow - vOff;
+        platforms[i].screenCol = platforms[i].worldCol - hOff;
+    }
+}
+
 int checkForPlatform() {
     for (int i = 0; i < MAXPLATLEN; i++) {
         if (collision(platforms[i].screenCol, platforms[i].screenRow, platforms[i].width, platforms[i].height, 
+            gummy.screenCol, gummy.screenRow, gummy.width, gummy.height)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int checkForBee() {
+    for (int i = 0; i < MAXBEELEN; i++) {
+        if (collision(bees[i].screenCol, bees[i].screenRow, bees[i].width, bees[i].height, 
             gummy.screenCol, gummy.screenRow, gummy.width, gummy.height)) {
                 return 1;
         }
