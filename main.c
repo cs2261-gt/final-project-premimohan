@@ -1,3 +1,27 @@
+/**
+Finished in the game so far:
+- states have been implemented
+- player can lose the game if they fall to the bottom of the screen or hit the bee
+- screen automatically scrolls up as the game progresses
+- player can jump on the platforms
+What still needs to be added:
+- moving cloud background in the game state
+- cheat state
+- correctly updating the platforms as the screen scrolls up
+- bees reappearing after moving off screen with proper collision
+- fix all the art and make the backgrounds pretty
+Bugs I have found:
+- the platforms don't reappear in a consistent manner; they should be reappearing every 15 pixels
+- after a while, the platforms start disappearing and reappearing really weirdly
+How to play the game in its current state:
+- As soon as you go to the game state, you have to press the "up" arrow to move up
+- The gummy will automatically bound on platforms, however to move every further up
+    you need to press the "up" arrow
+- To move left and right, press the respective arrow keys
+- To move through the states, press the start key
+- Also press the start key to restart the game after losing the game
+**/
+
 #include "myLib.h"
 #include <stddef.h>
 #include <stdio.h>
