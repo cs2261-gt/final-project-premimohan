@@ -9,6 +9,7 @@
 #include "clouds.h"
 #include "spritesheet.h"
 #include "candy.h"
+#include "pauseScreen.h"
 
 // buttons
 unsigned short buttons;
@@ -171,13 +172,32 @@ void gameState() {
     if (checkForBee()) {
         goToLose();
     }
+    if (checkForBottom()) {
+        goToLose();
+    }
 }
 
 void goToPause() {
+    // setting the frame rate
+    waitForVBlank();
+    // enable mode 0 and background 0
+    DMANow(3, pauseScreenPal, PALETTE, 256);
+    DMANow(3, pauseScreenTiles, &CHARBLOCK[0], pauseScreenTilesLen/2);
+    DMANow(3, pauseScreenMap, &SCREENBLOCK[28], pauseScreenMapLen/2);
+    hideSprites();
+    DMANow(3, shadowOAM, OAM, 512);
+    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_SMALL; 
+    // set the state of the game to PAUSE
+    state = PAUSE;
 
 }
 
 void pauseState() {
+    // setting the frame rate
+    waitForVBlank();
+    if (BUTTON_PRESSED(BUTTON_START)) {
+        goToGame();
+    }
 
 }
 

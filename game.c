@@ -7,8 +7,12 @@
 #include "spritesheet.h"
 #include "clouds.h"
 
+
+
 // create time variable
 int time;
+// create frame variable
+int frame;
 // create voff and hoff variables
 int vOff;
 int hOff;
@@ -35,6 +39,7 @@ void initGame() {
     initGummy();
     initBees();
     time++;
+    frame++;
 }
 
 void initPlatform() {
@@ -72,7 +77,7 @@ void initGummy() {
 
 void initBees() {
     for (int i = 0; i < MAXBEELEN; i++) {
-        bees[i].worldRow = rand() % 151 + vOff;
+        bees[i].worldRow = rand() % 153 + vOff;
         bees[i].worldCol = rand() % 176 + hOff;
         // bees[i].screenRow = bees[i].worldRow - vOff;
         // bees[i].screenCol = bees[i].worldCol - hOff;
@@ -94,11 +99,20 @@ void updateGame() {
     for (int i = 0; i < MAXBEELEN; i++) {
         bees[i].aniCounter++;
     }
-    updateGummy();
     aniBees();
+    updateBees();
     updatePlatform();
-    //checkForBee();
+    checkPlatformActive();
+    platformPop();
+    updateGummy();
+    checkBeeActive();
+    //updateBG();
+    if (frame == 25) {
+        vOff -= (2 + SHIFTDOWN(gummy.rdel));
+        frame = 0;
+    }
     time++;
+    frame++;
 }
 
 void aniBees() {
@@ -126,8 +140,6 @@ void aniBees() {
                         bees[i].curFrame++;
                     }
                 }
-                bees[i].screenCol = bees[i].worldCol - hOff;
-                bees[i].screenRow = bees[i].worldRow - vOff;
             }
         }
 }
@@ -153,21 +165,65 @@ void updateGummy() {
         //     gummy.worldRow += gummy.rdel;
         // }
         gummy.worldRow += gummy.rdel;
+        //vOff += GRAVITY;
     } else {
         gummy.rdel = 0;
-        if (BUTTON_PRESSED(BUTTON_UP)) {
-            gummy.rdel -= JUMPPOWER;
-            gummy.worldRow += gummy.rdel;
-        }
+        gummy.rdel -= JUMPPOWER;
+        gummy.worldRow += gummy.rdel;
     }
     gummy.screenRow = SHIFTDOWN(gummy.worldRow) - vOff;
     gummy.screenCol = gummy.worldCol - hOff;
 }
 
+int checkForBottom() {
+    return (gummy.screenRow > (SCREENHEIGHT - 16));
+}
+
 void updatePlatform() {
-    for(int i = 0; i < MAXPLATLEN; i++){
-        platforms[i].screenRow = platforms[i].worldRow - vOff;
-        platforms[i].screenCol = platforms[i].worldCol - hOff;
+    for  (int i = 0; i < MAXPLATLEN; i++) {
+        if (platforms[i].active) {
+            platforms[i].screenRow = platforms[i].worldRow - vOff;
+            platforms[i].screenCol = platforms[i].worldCol - hOff;
+        }
+    }
+}
+
+void checkPlatformActive() {
+    for (int i = 0; i < MAXPLATLEN; i++) {
+        if (platforms[i].screenRow > 150) {
+            platforms[i].active = 0;
+        }
+    }
+}
+
+void checkBeeActive() {
+    for (int i = 0; i < MAXBEELEN; i++) {
+        if (bees[i].screenRow > 150) {
+            bees[i].active = 0;
+        }
+    }
+}
+
+void platformPop() {
+    for (int i = 0; i < MAXPLATLEN; i++) {
+        if (platforms[i].active == 0) {
+            if (i == 0) {
+                platforms[i].worldRow = platforms[9].worldRow - 16;
+                platforms[i].worldCol = rand() % 223;
+                platforms[i].active = 1;
+            } else {
+                platforms[i].worldRow = platforms[i-1].worldRow - 16;
+                platforms[i].worldRow = rand() % 223;
+                platforms[i].active = 1;
+            }
+        }
+    }
+}
+
+void updateBees() {
+    for (int i = 0; i < MAXBEELEN; i++) {
+        bees[i].screenCol = bees[i].worldCol - hOff;
+        bees[i].screenRow = bees[i].worldRow - vOff;
     }
 }
 
@@ -191,16 +247,34 @@ int checkForBee() {
     return 0;
 }
 
-// int platformCol(int colA, int rowA, int widthA, int heightA, int colB, int rowB, int widthB, int heightB) {
-//     return rowA < rowB + heightB - 1 && rowA + heightA - 1 > rowB;
+int checkWhichPlatform() {
+    for (int i = 0; i < MAXPLATLEN; i++) {
+        if (collision(platforms[i].screenCol, platforms[i].screenRow, platforms[i].width, platforms[i].height, 
+            gummy.screenCol, gummy.screenRow, gummy.width, gummy.height)) {
+            return platforms[i].worldRow;
+        }
+    }
+    return 0;
+}
+
+// void updateBG() {
+//     if (checkForPlatform()) {
+//         //int gap = checkWhichPlatform();
+//         vOff += SHIFTDOWN(gummy.rdel);
+//     }
 // }
 
 void drawGame() {
     // draw platforms
     for (int i = 0; i < MAXPLATLEN; i++) {
-        shadowOAM[i].attr0 = (ROWMASK & platforms[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
-        shadowOAM[i].attr1 = (COLMASK & platforms[i].screenCol) | ATTR1_TINY;
-        shadowOAM[i].attr2 = ATTR2_TILEID(0, 0);
+        if (platforms[i].screenRow > 0 &&  platforms[i].active) {
+            shadowOAM[i].attr0 = (ROWMASK & platforms[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
+            shadowOAM[i].attr1 = (COLMASK & platforms[i].screenCol) | ATTR1_TINY;
+            shadowOAM[i].attr2 = ATTR2_TILEID(0, 0);
+        } else {
+            shadowOAM[i].attr0 = ATTR0_HIDE;
+        }
+
     }
     // draw gummy
     shadowOAM[127].attr0 = (ROWMASK & gummy.screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_TALL | ATTR0_NOBLEND;
@@ -208,8 +282,12 @@ void drawGame() {
     shadowOAM[127].attr2 = ATTR2_TILEID(2, 0);
     // draw bees
     for (int i = 0; i < MAXBEELEN; i++) {
-        shadowOAM[i + 20].attr0 = (ROWMASK & bees[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
-        shadowOAM[i + 20].attr1 = (COLMASK & bees[i].screenCol) | ATTR1_TINY;
-        shadowOAM[i + 20].attr2 = ATTR2_TILEID(bees[i].aniState, bees[i].curFrame);
+        if (bees[i].active) {
+            shadowOAM[i + 20].attr0 = (ROWMASK & bees[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
+            shadowOAM[i + 20].attr1 = (COLMASK & bees[i].screenCol) | ATTR1_TINY;
+            shadowOAM[i + 20].attr2 = ATTR2_TILEID(bees[i].aniState, bees[i].curFrame);
+        } else {
+            shadowOAM[i + 20].attr0 = ATTR0_HIDE;
+        }
     }
 }
