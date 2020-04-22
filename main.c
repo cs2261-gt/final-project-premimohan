@@ -25,6 +25,7 @@ How to play the game in its current state:
 #include <stdio.h>
 #include <stdlib.h>
 #include "game.h"
+#include "lose.h"
 #include "sound.h"
 #include "startScreen.h"
 #include "instructScreen.h"
@@ -212,11 +213,13 @@ void gameState() {
         stopSound();
         playSoundB(loseSound, LOSESOUNDLEN, 0);
         goToLose();
+        initLose();
     }
     if (checkForBottom()) {
         stopSound();
         playSoundB(loseSound, LOSESOUNDLEN, 0);
         goToLose();
+        initLose();
     }
 }
 
@@ -269,8 +272,12 @@ void goToLose() {
 }
 
 void loseState() {
+    updateLose();
+    drawLose();
     // setting the frame rate
     waitForVBlank();
+    // dma shadowOAM to OAM
+    DMANow(3, shadowOAM, OAM, 512);
     if (BUTTON_PRESSED(BUTTON_START)) {
         // go to start function
         goToStart();
