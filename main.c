@@ -26,6 +26,7 @@ How to play the game in its current state:
 #include <stdlib.h>
 #include "game.h"
 #include "lose.h"
+#include "cheat.h"
 #include "sound.h"
 #include "startScreen.h"
 #include "instructScreen.h"
@@ -209,6 +210,9 @@ void gameState() {
     if (BUTTON_PRESSED(BUTTON_START)) {
         goToPause();
     }
+    if (BUTTON_PRESSED(BUTTON_A)) {
+        goToCheat();
+    }
     if (checkForBee()) {
         stopSound();
         playSoundB(loseSound, LOSESOUNDLEN, 0);
@@ -248,10 +252,64 @@ void pauseState() {
 }
 
 void goToCheat() {
+        // setting the frame rate
+    waitForVBlank();
+    // load the candy background (bg 0) palette and tiles
+    DMANow(3, candyPal, PALETTE, 256);
+    DMANow(3, candyTiles, &CHARBLOCK[0], candyTilesLen/2);
+    DMANow(3, candyMap, &SCREENBLOCK[28], candyMapLen/2);
+    // set the bg 0 control register
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_TALL;
+    // move the screen onto the candy map
+    REG_BG1VOFF = vOff;
+    REG_BG1HOFF = hOff;
+    // load the clouds background (bg 1) tiles
+    DMANow(3, cloudsTiles, &CHARBLOCK[1], cloudsTilesLen/2);
+    DMANow(3, cloudsMap, &SCREENBLOCK[30], cloudsMapLen/2);
+    // set up the bg 1 control register
+    REG_BG0CNT = BG_CHARBLOCK(1) | BG_SCREENBLOCK(30) | BG_4BPP | BG_SIZE_WIDE;
+    // move the screen onto the clouds map
+    REG_BG0HOFF = clouds_hOff;
+    // load spritesheet tiles and palette into memory
+    DMANow(3, spritesheetPal, SPRITEPALETTE, 256);
+    DMANow(3, spritesheetTiles, &CHARBLOCK[4], spritesheetTilesLen / 2);
+    // hide all the sprites
+    hideSprites();
+    // enable the sprites
+    REG_DISPCTL = MODE0 | BG1_ENABLE | BG0_ENABLE | SPRITE_ENABLE; 
+    // wait for vblank
+    waitForVBlank();
+    // dma the shadowoam to the oam
+    DMANow(3, shadowOAM, OAM, 512);
+    // set the state of the game to GAME
+    state = CHEAT;
 
 }
 
 void cheatState() {
+    // update the game
+    updateCheat();
+    // draw the sprites
+    drawCheat();
+    // setting the frame rate
+    waitForVBlank();
+    // dma the shadowoam to the oam
+    DMANow(3, shadowOAM, OAM, 512);
+    // move the candy background according to voff and hoff
+    REG_BG1HOFF = hOff;
+    REG_BG1VOFF = vOff;
+    // move the cloud background based on the hoff
+    REG_BG0HOFF = clouds_hOff;
+    // if the player presses start, go to pause state
+    if (BUTTON_PRESSED(BUTTON_START)) {
+        goToPause();
+    }
+    if (checkForBottom1()) {
+        stopSound();
+        playSoundB(loseSound, LOSESOUNDLEN, 0);
+        goToLose();
+        initLose();
+    }
 
 }
 
