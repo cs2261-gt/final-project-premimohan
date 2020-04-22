@@ -3,16 +3,14 @@ Finished in the game so far:
 - states have been implemented
 - player can lose the game if they fall to the bottom of the screen or hit the bee
 - screen automatically scrolls up as the game progresses
-- player can jump on the platforms
+- player can jump on the platforms and platforms scroll up
+- bees reappear after moving off screen with proper collision
 What still needs to be added:
 - moving cloud background in the game state
 - cheat state
-- correctly updating the platforms as the screen scrolls up
-- bees reappearing after moving off screen with proper collision
 - fix all the art and make the backgrounds pretty
 Bugs I have found:
-- the platforms don't reappear in a consistent manner; they should be reappearing every 15 pixels
-- after a while, the platforms start disappearing and reappearing really weirdly
+
 How to play the game in its current state:
 - As soon as you go to the game state, you have to press the "up" arrow to move up
 - The gummy will automatically bound on platforms, however to move every further up
@@ -27,6 +25,7 @@ How to play the game in its current state:
 #include <stdio.h>
 #include <stdlib.h>
 #include "game.h"
+#include "sound.h"
 #include "startScreen.h"
 #include "instructScreen.h"
 #include "loseScreen.h"
@@ -34,6 +33,9 @@ How to play the game in its current state:
 #include "spritesheet.h"
 #include "candy.h"
 #include "pauseScreen.h"
+// include sound files
+#include "gummySong.h"
+#include "loseSound.h"
 
 // buttons
 unsigned short buttons;
@@ -98,6 +100,8 @@ int main() {
 
 void initialize() {
     goToStart();
+    setupSounds();
+    setupInterrupts();
 }
 
 void goToStart() {
@@ -119,6 +123,8 @@ void startState() {
     waitForVBlank();
     if (BUTTON_PRESSED(BUTTON_START)) {
         // go to instructions function
+        stopSound();
+        playSoundA(gummySong, GUMMYSONGLEN, 1);
         goToInstruct();
     }
 }
@@ -153,22 +159,29 @@ void instructState() {
 void goToGame() {
     // setting the frame rate
     waitForVBlank();
-    // load the background palette and tiles
+    // load the candy background (bg 0) palette and tiles
     DMANow(3, candyPal, PALETTE, 256);
     DMANow(3, candyTiles, &CHARBLOCK[0], candyTilesLen/2);
     DMANow(3, candyMap, &SCREENBLOCK[28], candyMapLen/2);
-    // set the background register
-    REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_TALL;
+    // set the bg 0 control register
+    REG_BG1CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_TALL;
     // move the screen onto the candy map
-    REG_BG0VOFF = vOff;
-    REG_BG0HOFF = hOff;
+    REG_BG1VOFF = vOff;
+    REG_BG1HOFF = hOff;
+    // load the clouds background (bg 1) tiles
+    DMANow(3, cloudsTiles, &CHARBLOCK[1], cloudsTilesLen/2);
+    DMANow(3, cloudsMap, &SCREENBLOCK[30], cloudsMapLen/2);
+    // set up the bg 1 control register
+    REG_BG0CNT = BG_CHARBLOCK(1) | BG_SCREENBLOCK(30) | BG_4BPP | BG_SIZE_WIDE;
+    // move the screen onto the clouds map
+    REG_BG0HOFF = clouds_hOff;
     // load spritesheet tiles and palette into memory
     DMANow(3, spritesheetPal, SPRITEPALETTE, 256);
     DMANow(3, spritesheetTiles, &CHARBLOCK[4], spritesheetTilesLen / 2);
     // hide all the sprites
     hideSprites();
     // enable the sprites
-    REG_DISPCTL = MODE0 | BG0_ENABLE | SPRITE_ENABLE; 
+    REG_DISPCTL = MODE0 | BG1_ENABLE | BG0_ENABLE | SPRITE_ENABLE; 
     // wait for vblank
     waitForVBlank();
     // dma the shadowoam to the oam
@@ -186,17 +199,23 @@ void gameState() {
     waitForVBlank();
     // dma the shadowoam to the oam
     DMANow(3, shadowOAM, OAM, 512);
-    // move the screen according to voff and hoff
-    REG_BG0HOFF = hOff;
-    REG_BG0VOFF = vOff;
+    // move the candy background according to voff and hoff
+    REG_BG1HOFF = hOff;
+    REG_BG1VOFF = vOff;
+    // move the cloud background based on the hoff
+    REG_BG0HOFF = clouds_hOff;
     // if the player presses start, go to pause state
     if (BUTTON_PRESSED(BUTTON_START)) {
         goToPause();
     }
     if (checkForBee()) {
+        stopSound();
+        playSoundB(loseSound, LOSESOUNDLEN, 0);
         goToLose();
     }
     if (checkForBottom()) {
+        stopSound();
+        playSoundB(loseSound, LOSESOUNDLEN, 0);
         goToLose();
     }
 }

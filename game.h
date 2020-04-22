@@ -12,10 +12,8 @@ int checkForBee();
 int checkForBottom();
 void updatePlatform();
 void updateBees();
-//void updateBG();
 int checkWhichPlatform();
 void checkPlatformActive();
-void platformPop();
 void checkBeeActive();
 
 // platform struct definition
@@ -81,3 +79,4 @@ typedef struct {
 // voff and hoff variables
 extern int hOff;
 extern int vOff;
+extern int clouds_hOff;

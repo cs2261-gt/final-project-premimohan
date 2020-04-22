@@ -8,7 +8,6 @@
 #include "clouds.h"
 
 
-
 // create time variable
 int time;
 // create frame variable
@@ -16,7 +15,8 @@ int frame;
 // create voff and hoff variables
 int vOff;
 int hOff;
-
+// create hoff variable for clouds
+int clouds_hOff;
 // create pool of platforms
 Platform platforms[MAXPLATLEN];
 // create a gummy bear instance
@@ -35,6 +35,7 @@ void hideSprites();
 void initGame() {
     vOff = 352;
     hOff = 0;
+    clouds_hOff = 0;
     initPlatform();
     initGummy();
     initBees();
@@ -103,17 +104,17 @@ void updateGame() {
     updateBees();
     updatePlatform();
     checkPlatformActive();
-    platformPop();
     updateGummy();
     checkBeeActive();
-    //updateBG();
     if (frame == 25) {
         vOff -= (2 + SHIFTDOWN(gummy.rdel));
+        clouds_hOff += 2;
         frame = 0;
     }
     time++;
     frame++;
 }
+
 
 void aniBees() {
         for (int i = 0; i < MAXBEELEN; i++) {
@@ -145,9 +146,9 @@ void aniBees() {
 }
 
 void updateGummy() {
-    if (BUTTON_PRESSED(BUTTON_RIGHT)) {
+    if (BUTTON_HELD(BUTTON_RIGHT)) {
         gummy.worldCol += gummy.cdel;
-    } else if (BUTTON_PRESSED(BUTTON_LEFT)) {
+    } else if (BUTTON_HELD(BUTTON_LEFT)) {
         gummy.worldCol -= gummy.cdel;
     }
     if (BUTTON_PRESSED(BUTTON_UP)) {
@@ -190,8 +191,14 @@ void updatePlatform() {
 
 void checkPlatformActive() {
     for (int i = 0; i < MAXPLATLEN; i++) {
-        if (platforms[i].screenRow > 150) {
-            platforms[i].active = 0;
+        if (platforms[i].screenRow > 160) { 
+            if(i == 0){
+                platforms[i].worldRow = platforms[9].worldRow - 16;
+                platforms[i].worldCol = rand() % 223;
+            } else {
+                platforms[i].worldRow = platforms[i-1].worldRow - 16;
+                platforms[i].worldCol = rand() % 223;
+            }
         }
     }
 }
@@ -199,23 +206,8 @@ void checkPlatformActive() {
 void checkBeeActive() {
     for (int i = 0; i < MAXBEELEN; i++) {
         if (bees[i].screenRow > 150) {
-            bees[i].active = 0;
-        }
-    }
-}
-
-void platformPop() {
-    for (int i = 0; i < MAXPLATLEN; i++) {
-        if (platforms[i].active == 0) {
-            if (i == 0) {
-                platforms[i].worldRow = platforms[9].worldRow - 16;
-                platforms[i].worldCol = rand() % 223;
-                platforms[i].active = 1;
-            } else {
-                platforms[i].worldRow = platforms[i-1].worldRow - 16;
-                platforms[i].worldRow = rand() % 223;
-                platforms[i].active = 1;
-            }
+            bees[i].worldRow = rand() % 153 + vOff;
+            bees[i].worldCol = rand() % 176 + hOff;
         }
     }
 }
@@ -257,17 +249,10 @@ int checkWhichPlatform() {
     return 0;
 }
 
-// void updateBG() {
-//     if (checkForPlatform()) {
-//         //int gap = checkWhichPlatform();
-//         vOff += SHIFTDOWN(gummy.rdel);
-//     }
-// }
-
 void drawGame() {
     // draw platforms
     for (int i = 0; i < MAXPLATLEN; i++) {
-        if (platforms[i].screenRow > 0 &&  platforms[i].active) {
+        if (platforms[i].screenRow > 0 && platforms[i].active && platforms[i].screenRow < SCREENHEIGHT) {
             shadowOAM[i].attr0 = (ROWMASK & platforms[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
             shadowOAM[i].attr1 = (COLMASK & platforms[i].screenCol) | ATTR1_TINY;
             shadowOAM[i].attr2 = ATTR2_TILEID(0, 0);
@@ -282,7 +267,7 @@ void drawGame() {
     shadowOAM[127].attr2 = ATTR2_TILEID(2, 0);
     // draw bees
     for (int i = 0; i < MAXBEELEN; i++) {
-        if (bees[i].active) {
+        if (bees[i].active && bees[i].screenRow > 0 && bees[i].screenRow < SCREENHEIGHT) {
             shadowOAM[i + 20].attr0 = (ROWMASK & bees[i].screenRow) | ATTR0_REGULAR | ATTR0_4BPP | ATTR0_WIDE | ATTR0_NOBLEND;
             shadowOAM[i + 20].attr1 = (COLMASK & bees[i].screenCol) | ATTR1_TINY;
             shadowOAM[i + 20].attr2 = ATTR2_TILEID(bees[i].aniState, bees[i].curFrame);
