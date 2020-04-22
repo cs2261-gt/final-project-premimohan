@@ -5,9 +5,10 @@ Finished in the game so far:
 - screen automatically scrolls up as the game progresses
 - player can jump on the platforms and platforms scroll up
 - bees reappear after moving off screen with proper collision
-What still needs to be added:
 - moving cloud background in the game state
 - cheat state
+
+What still needs to be added:
 - fix all the art and make the backgrounds pretty
 Bugs I have found:
 
@@ -18,6 +19,7 @@ How to play the game in its current state:
 - To move left and right, press the respective arrow keys
 - To move through the states, press the start key
 - Also press the start key to restart the game after losing the game
+****** - to enable the cheat mode, press button A in the game state
 **/
 
 #include "myLib.h"
