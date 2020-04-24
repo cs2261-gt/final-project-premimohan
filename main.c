@@ -10,6 +10,7 @@ Finished in the game so far:
 
 What still needs to be added:
 - fix all the art and make the backgrounds pretty
+
 Bugs I have found:
 
 How to play the game in its current state:
@@ -54,6 +55,9 @@ int state;
 
 // random seed
 int seed;
+
+// cheat check
+int cheat;
 
 // prototypes of functions
 void initialize();
@@ -214,6 +218,7 @@ void gameState() {
     }
     if (BUTTON_PRESSED(BUTTON_A)) {
         goToCheat();
+        cheat = 1;
     }
     if (checkForBee()) {
         stopSound();
@@ -248,7 +253,11 @@ void pauseState() {
     // setting the frame rate
     waitForVBlank();
     if (BUTTON_PRESSED(BUTTON_START)) {
-        goToGame();
+        if (cheat) {
+            goToCheat();
+        } else {
+            goToGame();
+        }
     }
 
 }

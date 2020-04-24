@@ -146,9 +146,9 @@ void aniBees() {
 }
 
 void updateGummy() {
-    if (BUTTON_HELD(BUTTON_RIGHT)) {
+    if (BUTTON_HELD(BUTTON_RIGHT) && (gummy.worldCol + gummy.width) < 239) {
         gummy.worldCol += gummy.cdel;
-    } else if (BUTTON_HELD(BUTTON_LEFT)) {
+    } else if (BUTTON_HELD(BUTTON_LEFT) && gummy.worldCol > 0) {
         gummy.worldCol -= gummy.cdel;
     }
     if (BUTTON_PRESSED(BUTTON_UP)) {

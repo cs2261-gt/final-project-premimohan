@@ -50,7 +50,7 @@ void initPlatform1() {
     platforms[0].height = 8;
     platforms[0].active = 1;
     for (int i = 1; i < MAXPLATLEN; i++) {
-        platforms[i].worldRow = platforms[i-1].worldRow - 15;
+        platforms[i].worldRow = platforms[i-1].worldRow - 8;
         platforms[i].worldCol = 112;
         platforms[i].rdel = 8;
         platforms[i].width = 16;
@@ -86,12 +86,12 @@ void updateCheat() {
 }
 
 void updateGummy1() {
-    if (BUTTON_HELD(BUTTON_RIGHT)) {
+    if (BUTTON_HELD(BUTTON_RIGHT) && (gummy.worldCol + gummy.width) < 239) {
         gummy.worldCol += gummy.cdel;
-    } else if (BUTTON_HELD(BUTTON_LEFT)) {
+    } else if (BUTTON_HELD(BUTTON_LEFT) && gummy.worldCol > 0) {
         gummy.worldCol -= gummy.cdel;
     }
-    if (BUTTON_PRESSED(BUTTON_UP)) {
+    if (BUTTON_PRESSED(BUTTON_UP) && gummy.worldRow > 0) {
         gummy.rdel -= JUMPPOWER;
     }
     if (time % 200) {
@@ -126,10 +126,10 @@ void checkPlatformActive1() {
     for (int i = 0; i < MAXPLATLEN; i++) {
         if (platforms[i].screenRow > 160) { 
             if(i == 0){
-                platforms[i].worldRow = platforms[9].worldRow - 16;
+                platforms[i].worldRow = platforms[9].worldRow - 8;
                 platforms[i].worldCol = 112;
             } else {
-                platforms[i].worldRow = platforms[i-1].worldRow - 16;
+                platforms[i].worldRow = platforms[i-1].worldRow - 8;
                 platforms[i].worldCol = 112;
             }
         }
