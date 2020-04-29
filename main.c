@@ -7,9 +7,9 @@ Finished in the game so far:
 - bees reappear after moving off screen with proper collision
 - moving cloud background in the game state
 - cheat state
+- the backgrounds are now semi pretty
 
 What still needs to be added:
-- fix all the art and make the backgrounds pretty
 
 Bugs I have found:
 
