@@ -350,6 +350,7 @@ void loseState() {
     DMANow(3, shadowOAM, OAM, 512);
     if (BUTTON_PRESSED(BUTTON_START)) {
         // go to start function
+        cheat = 0;
         goToStart();
     }
 }
