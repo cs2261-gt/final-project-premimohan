@@ -345,6 +345,7 @@ void loseState() {
     updateLose();
     drawLose();
     // setting the frame rate
+    
     waitForVBlank();
     // dma shadowOAM to OAM
     DMANow(3, shadowOAM, OAM, 512);
