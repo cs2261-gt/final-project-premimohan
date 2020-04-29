@@ -244,6 +244,7 @@ void goToPause() {
     hideSprites();
     DMANow(3, shadowOAM, OAM, 512);
     REG_BG0CNT = BG_CHARBLOCK(0) | BG_SCREENBLOCK(28) | BG_4BPP | BG_SIZE_SMALL; 
+    REG_BG0HOFF = 16;
     // set the state of the game to PAUSE
     state = PAUSE;
 
